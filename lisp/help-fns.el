@@ -571,7 +571,8 @@ FILE is the file where FUNCTION was probably defined."
 		real-function))
 	 (aliased (or (symbolp def)
 		      ;; Advised & aliased function.
-		      (and advised (symbolp real-function))))
+		      (and advised (symbolp real-function)
+			   (not (eq 'autoload (car-safe def))))))
 	 (real-def (cond
 		    (aliased (let ((f real-function))
 			       (while (and (fboundp f)
@@ -583,7 +584,8 @@ FILE is the file where FUNCTION was probably defined."
 	 (sig-key (if (subrp def)
                       (indirect-function real-def)
                     real-def))
-	 (file-name (find-lisp-object-file-name function def))
+	 (file-name (find-lisp-object-file-name function (if aliased 'defun
+                                                           def)))
          (pt1 (with-current-buffer (help-buffer) (point)))
 	 (beg (if (and (or (byte-code-function-p def)
 			   (keymapp def)
