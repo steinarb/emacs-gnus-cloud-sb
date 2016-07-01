@@ -306,7 +306,7 @@
     (let ((elems (gnus-cloud-files-to-upload full))
           (group (gnus-group-full-name gnus-cloud-group-name gnus-cloud-method)))
       (insert (format "Subject: (sequence: %d type: %s storage-method: %s)\n"
-                      gnus-cloud-sequence
+                      (or gnus-cloud-sequence "UNKNOWN")
                       (if full :full :partial)
                       gnus-cloud-storage-method))
       (insert "From: nobody@gnus.cloud.invalid\n")
@@ -315,7 +315,7 @@
       (if (gnus-request-accept-article gnus-cloud-group-name gnus-cloud-method
                                        t t)
           (progn
-            (setq gnus-cloud-sequence (1+ gnus-cloud-sequence))
+            (setq gnus-cloud-sequence (1+ (or gnus-cloud-sequence 0)))
             (gnus-cloud-add-timestamps elems)
             (gnus-message 3 "Uploaded Emacs Cloud data successfully to %s" group))
         (gnus-error 2 "Failed to upload Emacs Cloud data to %s" group)))))
@@ -380,7 +380,7 @@ Otherwise, returns the Gnus Cloud data chunks."
         chunks)
     (dolist (header (gnus-cloud-available-chunks))
       (when (> (gnus-cloud-chunk-sequence (mail-header-subject header))
-               (or sequence-override gnus-cloud-sequence))
+               (or sequence-override gnus-cloud-sequence -1))
 
         (if (string-match (format "storage-method: %s" gnus-cloud-storage-method)
                           (mail-header-subject header))
