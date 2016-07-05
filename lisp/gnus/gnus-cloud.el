@@ -342,7 +342,7 @@ When FULL is t, upload everything, not just a difference from the last full."
                   (gnus-cloud-files-to-upload full)
                   (gnus-cloud-collect-full-newsrc)))
           (group (gnus-group-full-name gnus-cloud-group-name gnus-cloud-method)))
-      (insert (format "Subject: (sequence: %d type: %s storage-method: %s)\n"
+      (insert (format "Subject: (sequence: %s type: %s storage-method: %s)\n"
                       (or gnus-cloud-sequence "UNKNOWN")
                       (if full :full :partial)
                       gnus-cloud-storage-method))
