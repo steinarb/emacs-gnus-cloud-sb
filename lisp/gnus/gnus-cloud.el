@@ -57,6 +57,11 @@
                  (const :tag "Base64+gzip" base64-gzip)
                  (const :tag "EPG" epg)))
 
+(defcustom gnus-cloud-interactive t
+  "Whether Gnus Cloud changes should be confirmed."
+  :group 'gnus-cloud
+  :type 'boolean)
+
 (defvar gnus-cloud-group-name "Emacs-Cloud")
 (defvar gnus-cloud-covered-servers nil)
 
@@ -202,9 +207,13 @@
        (t
         (gnus-message 1 "Unknown type %s; ignoring" type))))))
 
-(defun gnus-cloud-update-newsrc-data (group elem)
-  "Update the newsrc data for GROUP from ELEM."
+(defun gnus-cloud-update-newsrc-data (group elem &optional force-older)
+  "Update the newsrc data for GROUP from ELEM.
+Use old data if FORCE-OLDER is not nil."
   (let* ((contents (plist-get elem :contents))
+         (date (or (plist-get elem :timestamp) "0"))
+         (now (gnus-cloud-timestamp (current-time)))
+         (newer (string-lessp date now))
          (group-info (gnus-get-info group)))
     (if (and contents
              (stringp (nth 0 contents))
@@ -213,9 +222,15 @@
             (if (equal (format "%S" group-info)
                        (format "%S" contents))
                 (gnus-message 3 "Skipping cloud update of group %s, the info is the same" group)
-              (gnus-message 2 "Installing cloud update of group %s" group)
-              (gnus-set-info group contents)
-              (gnus-group-update-group group))
+              (if (and newer (not force-older))
+                (gnus-message 3 "Skipping outdated cloud info for group %s, the info is from %s (now is %s)" group date now)
+                (when (or (not gnus-cloud-interactive)
+                          (gnus-y-or-n-p
+                           (format "%s has older different info in the cloud as of %s, update it here? "
+                                   group date))))
+                (gnus-message 2 "Installing cloud update of group %s" group)
+                (gnus-set-info group contents)
+                (gnus-group-update-group group)))
           (gnus-error 1 "Sorry, group %s is not subscribed" group))
       (gnus-error 1 "Sorry, could not update newsrc for group %s (invalid data %S)"
                   group elem))))
@@ -231,8 +246,9 @@
          ((eq op :delete)
           (if (and exists
                    ;; prompt only if the file exists already
-                   (gnus-y-or-n-p (format "%s has been deleted as of %s, delete it locally? "
-                                          file-name date)))
+                   (or (not gnus-cloud-interactive)
+                       (gnus-y-or-n-p (format "%s has been deleted as of %s, delete it locally? "
+                                              file-name date))))
               (rename-file file-name (car (find-backup-file-name file-name)))
             (gnus-message 3 "%s was already deleted before the cloud got it" file-name)))
          ((eq op :file)
@@ -242,8 +258,9 @@
                            (insert-file-contents-literally file-name)
                            (not (equal (buffer-string) contents)))
                          ;; prompt only if the file exists already
-                         (gnus-y-or-n-p (format "%s has updated contents as of %s, update it? "
-                                                file-name date))))
+                         (or (not gnus-cloud-interactive)
+                             (gnus-y-or-n-p (format "%s has updated contents as of %s, update it? "
+                                                    file-name date)))))
             (gnus-cloud-replace-file file-name date contents))))
       (gnus-message 2 "%s isn't covered by the cloud; ignoring" file-name))))
 
@@ -342,7 +359,7 @@ When FULL is t, upload everything, not just a difference from the last full."
                   (gnus-cloud-files-to-upload full)
                   (gnus-cloud-collect-full-newsrc)))
           (group (gnus-group-full-name gnus-cloud-group-name gnus-cloud-method)))
-      (insert (format "Subject: (sequence: %d type: %s storage-method: %s)\n"
+      (insert (format "Subject: (sequence: %s type: %s storage-method: %s)\n"
                       (or gnus-cloud-sequence "UNKNOWN")
                       (if full :full :partial)
                       gnus-cloud-storage-method))
@@ -354,7 +371,8 @@ When FULL is t, upload everything, not just a difference from the last full."
           (progn
             (setq gnus-cloud-sequence (1+ (or gnus-cloud-sequence 0)))
             (gnus-cloud-add-timestamps elems)
-            (gnus-message 3 "Uploaded Emacs Cloud data successfully to %s" group))
+            (gnus-message 3 "Uploaded Emacs Cloud data successfully to %s" group)
+            (gnus-group-refresh-group group))
         (gnus-error 2 "Failed to upload Emacs Cloud data to %s" group)))))
 
 (defun gnus-cloud-add-timestamps (elems)

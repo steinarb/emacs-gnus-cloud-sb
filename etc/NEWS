@@ -187,8 +187,30 @@ questions, with a handy way to display help texts.
 'undo', undo the last replacement; bound to 'u'.
 'undo-all', undo all replacements; bound to 'U'.
 
+** 'delete-trailing-whitespace' deletes whitespace after form feed.
+In modes where form feed was treated as a whitespace character,
+'delete-trailing-whitespace' would keep lines containing it unchanged.
+It now deletes whitespace after the last form feed thus behaving the
+same as in modes where the character is not whitespace.
+
 
 * Changes in Specialized Modes and Packages in Emacs 25.2
+
+** Ibuffer
+
+---
+*** A new command 'ibuffer-unmark-all-marks' to unmark
+all buffers without asking confirmation;  bound to
+'U'; 'ibuffer-do-replace-regexp' bound to 'r'.
+
+---
+*** A new command `ibuffer-mark-by-content-regexp' to mark buffers
+whose content matches a regexp; bound to '% c' and '% g'.
+
+---
+*** Two new options `ibuffer-never-search-content-name' and
+`ibuffer-never-search-content-mode' used by
+`ibuffer-mark-by-content-regexp'.
 
 ** Compilation mode
 
@@ -301,6 +323,10 @@ different group ID.
 
 +++
 *** New connection method "doas" for OpenBSD hosts.
+
++++
+*** New connection method "gdrive", which allows to access Google
+Drive onsite repositories.
 
 ---
 ** 'auto-revert-use-notify' is set back to t in 'global-auto-revert-mode'.
