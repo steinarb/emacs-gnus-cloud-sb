@@ -371,7 +371,8 @@ When FULL is t, upload everything, not just a difference from the last full."
           (progn
             (setq gnus-cloud-sequence (1+ (or gnus-cloud-sequence 0)))
             (gnus-cloud-add-timestamps elems)
-            (gnus-message 3 "Uploaded Emacs Cloud data successfully to %s" group))
+            (gnus-message 3 "Uploaded Emacs Cloud data successfully to %s" group)
+            (gnus-group-refresh-group group))
         (gnus-error 2 "Failed to upload Emacs Cloud data to %s" group)))))
 
 (defun gnus-cloud-add-timestamps (elems)
