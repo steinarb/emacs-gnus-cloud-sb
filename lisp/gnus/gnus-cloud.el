@@ -99,7 +99,7 @@ easy interactive way to set this from the Server buffer."
        ((eq (plist-get elem :type) :file)
         (let (length data)
           (mm-with-unibyte-buffer
-            (insert-file-contents-literally (plist-get elem :file-name))
+            (insert-file-contents (plist-get elem :file-name))
             (setq length (buffer-size)
                   data (buffer-string)))
           (insert (format "(:type :file :file-name %S :timestamp %S :length %d)\n"
