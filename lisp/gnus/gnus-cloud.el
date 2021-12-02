@@ -275,7 +275,7 @@ easy interactive way to set this from the Server buffer."
   (mm-with-unibyte-buffer
     (insert new-contents)
     (when (file-exists-p file-name)
-      (rename-file file-name (car (find-backup-file-name file-name))))
+      (rename-file file-name (car (find-backup-file-name file-name)) t))
     (write-region (point-min) (point-max) file-name nil nil nil 'excl)
     (set-file-times file-name (parse-iso8601-time-string date))))
 
